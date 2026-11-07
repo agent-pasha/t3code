@@ -1,3 +1,4 @@
+import { EnvironmentId, ThreadId } from "@t3tools/contracts";
 import { AppBar } from "../../components/ui/AppBar";
 import { ScreenHeaderButton } from "../../components/ui/ScreenHeaderButton";
 import type { AppBarAction, AppBarMenu } from "../../components/ui/AppBar.types";
@@ -9,6 +10,7 @@ import {
   useThreadGitMenuDefinition,
   type ThreadGitControlsProps,
 } from "./ThreadGitControls";
+import { useThreadServersMenu } from "./useThreadServersMenu";
 
 export function ThreadHeader(props: {
   readonly title: string;
@@ -27,6 +29,11 @@ export function ThreadHeader(props: {
     useAdaptiveWorkspaceLayout();
   const gitMenu = useThreadGitMenuDefinition(props.gitControls);
   const terminalMenu = threadTerminalMenu(props.gitControls);
+  const serversMenu = useThreadServersMenu({
+    environmentId: EnvironmentId.make(String(props.gitControls.environmentId)),
+    threadId: ThreadId.make(String(props.gitControls.threadId)),
+    enabled: props.gitControls.hasThread !== false && props.draft !== true,
+  });
   const filesVisible = props.inspectorMode === "files" && panes.auxiliaryPaneVisible;
   const inspectorVisible = props.inspectorMode !== null && panes.auxiliaryPaneVisible;
   const actions: AppBarAction[] = props.hasThreadCwd
@@ -41,7 +48,9 @@ export function ThreadHeader(props: {
         },
       ]
     : [];
-  const menus = [gitMenu, terminalMenu].filter((menu): menu is AppBarMenu => menu !== null);
+  const menus = [gitMenu, terminalMenu, serversMenu].filter(
+    (menu): menu is AppBarMenu => menu !== null,
+  );
 
   return (
     <AppBar

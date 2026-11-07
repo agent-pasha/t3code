@@ -4,6 +4,7 @@ import { PREVIEW_STREAM_BASE_PATH } from "@t3tools/client-runtime/preview/server
 import { createPreviewEnvironmentAtoms } from "@t3tools/client-runtime/state/preview";
 import { resolveDeviceHubAccess } from "@t3tools/client-runtime/state/deviceHubAccess";
 import type {
+  DiscoveredLocalServer,
   EnvironmentId,
   PreviewEvent,
   PreviewListResult,
@@ -137,6 +138,26 @@ export function useThreadServerBrowserTabs(input: {
   );
   const sessions = tabs.sessions.filter((session) => session.runtime === "server");
   return { tabs: sessions, loaded: tabs.listed };
+}
+
+const NO_SERVERS: ReadonlyArray<DiscoveredLocalServer> = [];
+
+/** Local servers the thread's terminals or agent started on the environment. */
+export function useThreadDiscoveredServers(input: {
+  readonly environmentId: EnvironmentId;
+  readonly threadId: ThreadId;
+  readonly enabled: boolean;
+}): ReadonlyArray<DiscoveredLocalServer> {
+  const query = useEnvironmentQuery(
+    input.enabled
+      ? previewEnvironment.discoveredServers({ environmentId: input.environmentId, input: {} })
+      : null,
+  );
+  const servers = query.data?.servers ?? NO_SERVERS;
+  return servers.filter(
+    (server) =>
+      server.terminal?.threadId === input.threadId || server.agent?.threadId === input.threadId,
+  );
 }
 
 // The earliest time the next access request may go out.
